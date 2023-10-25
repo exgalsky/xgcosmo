@@ -1,39 +1,38 @@
-import numpy as np 
-# from scipy.interpolate import interp1d 
-from joblib import Parallel, delayed
-from jax import numpy as jnp
-
-import logging
-log = logging.getLogger(__name__)
-
-try:
-    import classy 
-    class_present = True
-except:
-    class_present = False
-
-try:
-    import camb 
-    camb_present = True
-except:
-    camb_present = False 
-
-
-class_paramset = (['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars'], #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0',     'wa'],\
-                  ['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars']) #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0_fld', 'wa_fld'])
-
-camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c', 'A_s', 'n_s', 'alpha_s', 'YHe', 'N_ur',          'N_ncdm',         'm_ncdm','w0','wa'],
-                 ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
-
-ccl_paramset = (['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'],
-                ['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'])
-
 class cosmology:
     '''
         Sets up Cosmology wrapper for various options of libraries.
     '''
 
     def __init__(self, backend, **kwargs):
+
+        import numpy as np 
+        from joblib import Parallel, delayed
+        import logging
+        log = logging.getLogger(__name__)
+        from jax import numpy as jnp
+
+        try:
+            import classy 
+            class_present = True
+        except:
+            class_present = False
+
+        try:
+            import camb 
+            camb_present = True
+        except:
+            camb_present = False 
+
+
+        class_paramset = (['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars'], #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0',     'wa'],\
+                        ['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars']) #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0_fld', 'wa_fld'])
+
+        camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c', 'A_s', 'n_s', 'alpha_s', 'YHe', 'N_ur',          'N_ncdm',         'm_ncdm','w0','wa'],
+                        ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
+
+        ccl_paramset = (['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'],
+                        ['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'])
+
         #-------------------------------------------------------------------------
         # COSMOLOGICAL PARAMETERS (Planck 2018 best fit TT,TE,EE+lowE+lensing)
         # Table 1, First column, Plick best fit [https://arxiv.org/abs/1807.06209]
@@ -108,8 +107,6 @@ class cosmology:
             camb_par = camb.set_params(**self.camb_params)
             self.camb_wsp = camb.get_results(camb_par)
 
-
-
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
             backend.print2log(log, "CLASS dependency not met. Install CLASS and Classy to use CLASS backend.", level="critical")
             exit()
@@ -143,6 +140,7 @@ class cosmology:
         # self.__HubbleH_interpol = interp1d(_z_grid,_Hubble, kind='linear', bounds_error=False, fill_value="extrapolate")
 
     def comoving_distance(self, z):
+        from jax import numpy as jnp
         if self.params['cosmo_backend'].upper() == 'CLASS':
             # return self.__z2comov_interpol(z)
             return jnp.interp(z, self._z_grid, self._comoving_dist)
@@ -150,17 +148,19 @@ class cosmology:
             return self.camb_wsp.comoving_radial_distance(z)
 
     def comoving_distance2z(self,comoving_distance):
+        from jax import numpy as jnp
         # return self.__comov2z_interpol(comoving_distance)
         return jnp.interp(comoving_distance, self._comoving_dist, self._z_grid)
 
     def growth_factor_D(self, z):
+        from jax import numpy as jnp
         # return self.__growthD_interpol(z)
         return jnp.interp(z, self._z_grid, self._growth_factor)
 
     def Hubble_H(self, z):
+        from jax import numpy as jnp
         # return self.__HubbleH_interpol(z)
         return jnp.interp(z, self._z_grid, self._Hubble)
-
 
 
     
