@@ -105,6 +105,12 @@ class cosmology:
             self.camb_params['HO'] *= 100.
 
             camb_par = camb.set_params(**self.camb_params)
+            camb_par.NonLinear = camb.model.NonLinear_none
+            camb_par.InitPower.set_params(ns=self.params['n_s'])
+            camb_par.set_matter_power(redshifts=[0.,], kmax=2.0)
+
+            self._k_grid, z, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1, npoints = 200)
+            self.s8 = jnp.array(self.camb_wsp.get_sigma8())
             self.camb_wsp = camb.get_results(camb_par)
 
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
@@ -162,5 +168,6 @@ class cosmology:
         # return self.__HubbleH_interpol(z)
         return jnp.interp(z, self._z_grid, self._Hubble)
 
-
-    
+    def matter_power(self, k):
+        from jax import numpy as jnp
+        return jnp.interp(k, self._k_grid, self._pk)
