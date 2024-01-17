@@ -10,3 +10,6 @@ cosmo_wsp = cosmo.cosmology(backend, cosmo_backend='CAMB') # for background expa
 
 k = jnp.logspace(-3,1,1000)
 pk = cosmo_wsp.matter_power(k) # power spectrum
+
+plt.loglog(k, pk, '-')
+plt.savefig('pk_vs_k_example.png')
