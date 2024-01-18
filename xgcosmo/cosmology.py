@@ -106,7 +106,7 @@ class cosmology:
 
             camb_par = camb.set_params(**self.camb_params)
             camb_par.NonLinear = camb.model.NonLinear_none
-            camb_par.InitPower.set_params(ns=self.params['n_s'])
+            # camb_par.InitPower.set_params(ns=self.params['n_s'])
             camb_par.set_matter_power(redshifts=[0.,], kmax=2.0)
 
             self.camb_wsp = camb.get_results(camb_par)
