@@ -27,10 +27,9 @@ class cosmology:
         class_paramset = (['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars'], #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0',     'wa'],\
                         ['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars']) #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0_fld', 'wa_fld'])
 
-        # camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c', 'A_s', 'n_s', 'alpha_s', 'YHe', 'N_ur',          'N_ncdm',         'm_ncdm','w0','wa'],
-        #                ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
-        camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c'],
-                         ['TCMB', 'H0', 'omk',     'ombh2',   'omch2'])
+        camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c', 'A_s', 'n_s', 'alpha_s', 'YHe', 'N_ur',          'N_ncdm',         'm_ncdm','w0','wa'],
+                       ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
+
         ccl_paramset = (['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'],
                         ['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'])
 
@@ -60,7 +59,7 @@ class cosmology:
             'YHe': 0.2454,          # Helium fraction
 #=============Light relics===========================
             'N_ur': 2.0328,     # Ultra-relativistic species (ultra-light neutrinos)
-            'N_ncdm': 1.,       # Light massive relics including massive neutrinos
+            'N_ncdm': 1,       # Light massive relics including massive neutrinos
             'm_ncdm': 0.06,     # mass of non-cold light relics
 #===========DE EOS===================================
             'w0': -1.,         
