@@ -6,7 +6,8 @@ import logging
 import xgcosmo.cosmology   as cosmo
 
 backend = bk.Backend(force_no_gpu=True,force_no_mpi=True)
-cosmo_wsp = cosmo.cosmology(backend, cosmo_backend='CAMB') # for background expansion consistent with websky
+cosmo_wsp = cosmo.cosmology(backend, h0=0.67, ns=0.96, cosmo_backend='CAMB') # for background expansion consistent with websky
+print(cosmo_wsp.camb_params)
 
 k = jnp.logspace(-3,1,1000)
 pk = cosmo_wsp.matter_power(k) # power spectrum
