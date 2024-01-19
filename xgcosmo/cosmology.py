@@ -28,7 +28,7 @@ class cosmology:
                         ['T_cmb','h', 'Omega_m', 'Omega_b', 'Omega_k', 'A_s', 'n_s', 'alpha_s', 'r', 'k_pivot','YHe','N_ur', 'N_ncdm','m_ncdm', 'modes','output', 'l_max_scalars']) #, 'l_max_tensors', 'n_t', 'alpha_t',, 'w0_fld', 'wa_fld'])
 
         camb_paramset = (['T_cmb', 'h', 'Omega_k', 'Omega_b', 'Omega_c', 'A_s', 'n_s', 'alpha_s', 'YHe', 'N_ur',          'N_ncdm',         'm_ncdm','w0','wa'],
-                        ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
+                       ['TCMB', 'H0', 'omk',     'ombh2',  'omch2',    'As',  'ns',  'nrun',    'YHe', 'num_nu_massless','num_nu_massive','mnu',   'w', 'wa'])
 
         ccl_paramset = (['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'],
                         ['Omega_c','Omega_b', 'h', 'A_s', 'sigma8', 'n_s', 'Omega_k', 'Omega_g', 'N_eff', 'm_nu', 'mnu_type', 'w0', 'wa'])
@@ -59,7 +59,7 @@ class cosmology:
             'YHe': 0.2454,          # Helium fraction
 #=============Light relics===========================
             'N_ur': 2.0328,     # Ultra-relativistic species (ultra-light neutrinos)
-            'N_ncdm': 1.,       # Light massive relics including massive neutrinos
+            'N_ncdm': 1,       # Light massive relics including massive neutrinos
             'm_ncdm': 0.06,     # mass of non-cold light relics
 #===========DE EOS===================================
             'w0': -1.,         
@@ -102,10 +102,16 @@ class cosmology:
                 self.camb_params[camb_paramset[1][i]] = self.params[common_key]
             self.camb_params['ombh2'] *= self.params['h']**2.
             self.camb_params['omch2'] *= self.params['h']**2.
-            self.camb_params['HO'] *= 100.
+            self.camb_params['H0'] *= 100.
 
             camb_par = camb.set_params(**self.camb_params)
+            camb_par.NonLinear = camb.model.NonLinear_none
+            # camb_par.InitPower.set_params(ns=self.params['n_s'])
+            camb_par.set_matter_power(redshifts=[0.,], kmax=2.0)
+
             self.camb_wsp = camb.get_results(camb_par)
+            self._k_grid, z, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
+            self.s8 = jnp.array(self.camb_wsp.get_sigma8())
 
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
             backend.print2log(log, "CLASS dependency not met. Install CLASS and Classy to use CLASS backend.", level="critical")
@@ -162,5 +168,6 @@ class cosmology:
         # return self.__HubbleH_interpol(z)
         return jnp.interp(z, self._z_grid, self._Hubble)
 
-
-    
+    def matter_power(self, k):
+        from jax import numpy as jnp
+        return jnp.interp(k, self._k_grid, self._pk[0,:])
