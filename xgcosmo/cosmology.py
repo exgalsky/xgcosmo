@@ -112,7 +112,6 @@ class cosmology:
             self.camb_wsp = camb.get_results(camb_par)
             self._k_grid, z, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
             self.s8 = jnp.array(self.camb_wsp.get_sigma8())
-
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
             backend.print2log(log, "CLASS dependency not met. Install CLASS and Classy to use CLASS backend.", level="critical")
             exit()
