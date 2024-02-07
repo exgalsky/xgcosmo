@@ -110,8 +110,17 @@ class cosmology:
             camb_par.set_matter_power(redshifts=[0.,], kmax=2.0)
 
             self.camb_wsp = camb.get_results(camb_par)
-            self._k_grid, z, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
+            self._k_grid, self._z_grid, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
             self.s8 = jnp.array(self.camb_wsp.get_sigma8())
+
+            # self._z_grid = np.logspace(-5, 6, num=10000) 
+            print(self._z_grid)
+            self._comoving_dist = jnp.asarray(self.camb_wsp.comoving_radial_distance(self._z_grid))
+            self._growth_factor = jnp.asarray(self.camb_wsp.get_sigma8() / self.camb_wsp.get_sigma8_0())
+            self._Hubble        = jnp.asarray(self.camb_wsp.hubble_parameter(self._z_grid))
+
+            self._z_grid = jnp.asarray(self._z_grid)
+
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
             backend.print2log(log, "CLASS dependency not met. Install CLASS and Classy to use CLASS backend.", level="critical")
             exit()
@@ -130,19 +139,6 @@ class cosmology:
             self._Hubble = jnp.asarray(Parallel(n_jobs=-2, prefer="threads")(delayed (self.class_wsp.Hubble)(z) for z in self._z_grid))
 
             self._z_grid = jnp.asarray(self._z_grid)
-
-        # if self.params['cosmo_backend'].upper() == 'CLASS':
-        #     _z_grid = np.logspace(-3, 3, num=1000) 
-        #     # _comoving_dist= np.empty(self.z_for_comov.shape)
-        #     # for i, z in enumerate(_z_for_comov):
-        #         # _comoving_dist[i] = self.class_wsp.comoving_distance(z)
-        #     _comoving_dist = Parallel(n_jobs=-2, prefer="threads")(delayed (self.class_wsp.comoving_distance)(z) for z in _z_grid)
-        #     _growth_factor = Parallel(n_jobs=-2, prefer="threads")(delayed (self.class_wsp.scale_independent_growth_factor)(z) for z in _z_grid)
-
-        # self.__z2comov_interpol = interp1d(_z_grid,_comoving_dist, kind='linear', bounds_error=False, fill_value="extrapolate")
-        # self.__comov2z_interpol = interp1d(_comoving_dist,_z_grid, kind='linear', bounds_error=False, fill_value="extrapolate")
-        # self.__growthD_interpol = interp1d(_z_grid,_growth_factor, kind='linear', bounds_error=False, fill_value="extrapolate")
-        # self.__HubbleH_interpol = interp1d(_z_grid,_Hubble, kind='linear', bounds_error=False, fill_value="extrapolate")
 
     def comoving_distance(self, z):
         from jax import numpy as jnp
