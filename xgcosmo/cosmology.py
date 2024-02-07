@@ -107,20 +107,25 @@ class cosmology:
             camb_par = camb.set_params(**self.camb_params)
             camb_par.NonLinear = camb.model.NonLinear_none
             # camb_par.InitPower.set_params(ns=self.params['n_s'])
-            camb_par.set_matter_power(redshifts=[0.,], kmax=2.0)
+
+            self._z_grid_pk = np.append(np.array([0.]), np.logspace(-5, 6, num=255))
+            camb_par.set_matter_power(redshifts=self._z_grid_pk, kmax=2.0)
 
             self.camb_wsp = camb.get_results(camb_par)
-            self._k_grid, self._z_grid, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
+            self._k_grid, z, self._pk = self.camb_wsp.get_matter_power_spectrum(minkh=1e-4, maxkh=1e2, npoints = 2000)
             self.s8 = jnp.array(self.camb_wsp.get_sigma8())
+            # print(z[0], np.argmin(z), self._z_grid_pk)
 
-            # self._z_grid = np.logspace(-5, 6, num=10000) 
-            print(self._z_grid)
+            min_k_idx = np.argmin(self._k_grid)
+
+            # print(min_k_idx, self._k_grid[min_k_idx])
+            self._z_grid = np.logspace(-5, 6, num=10000) 
             self._comoving_dist = jnp.asarray(self.camb_wsp.comoving_radial_distance(self._z_grid))
-            self._growth_factor = jnp.asarray(self.camb_wsp.get_sigma8() / self.camb_wsp.get_sigma8_0())
+            self._growth_factor = jnp.asarray(np.sqrt(self._pk[:, min_k_idx] / self._pk[0, min_k_idx]))
             self._Hubble        = jnp.asarray(self.camb_wsp.hubble_parameter(self._z_grid))
 
+            self._z_grid_pk = jnp.asarray(self._z_grid_pk)
             self._z_grid = jnp.asarray(self._z_grid)
-
         if (self.params['cosmo_backend'].upper() == 'CLASS') and not class_present:
             backend.print2log(log, "CLASS dependency not met. Install CLASS and Classy to use CLASS backend.", level="critical")
             exit()
@@ -142,11 +147,11 @@ class cosmology:
 
     def comoving_distance(self, z):
         from jax import numpy as jnp
-        if self.params['cosmo_backend'].upper() == 'CLASS':
+        # if self.params['cosmo_backend'].upper() == 'CLASS':
             # return self.__z2comov_interpol(z)
-            return jnp.interp(z, self._z_grid, self._comoving_dist)
-        if self.params['cosmo_backend'].upper() == 'CAMB':
-            return self.camb_wsp.comoving_radial_distance(z)
+        return jnp.interp(z, self._z_grid, self._comoving_dist)
+        # if self.params['cosmo_backend'].upper() == 'CAMB':
+        #     return self.camb_wsp.comoving_radial_distance(z)
 
     def comoving_distance2z(self,comoving_distance):
         from jax import numpy as jnp
@@ -156,7 +161,11 @@ class cosmology:
     def growth_factor_D(self, z):
         from jax import numpy as jnp
         # return self.__growthD_interpol(z)
-        return jnp.interp(z, self._z_grid, self._growth_factor)
+        if self.params['cosmo_backend'].upper() == 'CLASS':
+            return jnp.interp(z, self._z_grid, self._growth_factor)
+        if self.params['cosmo_backend'].upper() == 'CAMB':
+            return jnp.interp(z, self._z_grid_pk, self._growth_factor)
+        
 
     def Hubble_H(self, z):
         from jax import numpy as jnp
